@@ -1,7 +1,7 @@
 About the package
 ------------------
 
-**meliora** is a Python package that provides a set of statistical tests and tools to assess the performance of the credit risk models. The aim of the package is to provide all common tests used by today's modellers when developing, maintaining and validating their PD, LGD, EAD and prepayment models. All tests have been thoroughly tested and documented. Whenever possible, the definition of the test was retrieved from the authoritive source like the EBA, the ECB or the Basel Committee.
+**meliora** is a Python package that provides a set of statistical tests and tools to assess the performance of the credit risk models. All tests are covered with unit tests and algorithms have been replicated in other tools like R, MATLAB and SAS to avoid errors. Whenever possible, the definition of the test was retrieved from the authoritive source like the EBA, the ECB or the Basel Committee.
 
 The main contributors started building their first statistical credit models back in 2003. Over the years, we have impemented similar set of tests in several different financial institutions. 
 
@@ -12,7 +12,7 @@ have taken great care to ensure that no part of this package contains proprietar
 
 Main aim
 -----------------
-The aim of this package is to provide credit risk practioners with the tools to develop their credit risk models without the need to implement standard tooling. All tests should be covered with unit tests and algorithms should be replicated using other tools to avoid errors.
+The aim of the package is to provide all common tests used by today's modellers when developing, maintaining and validating their PD, LGD, EAD and prepayment models. The aim of this package is to provide credit risk practioners with the tools to develop their credit risk models without reinventing the wheel. 
 
 Main Features
 -----------------
