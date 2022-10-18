@@ -1,8 +1,5 @@
-#   -------------------------------------------------------------
-#   Copyright (c) Microsoft Corporation. All rights reserved.
-#   Licensed under the MIT License. See LICENSE in project root for information.
-#   -------------------------------------------------------------
-"""Python Package Template"""
-from __future__ import annotations
+import sys
+import os
 
-__version__ = "0.0.2"
+SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
+sys.path.append(os.path.dirname(SCRIPT_DIR))
