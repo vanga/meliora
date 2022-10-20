@@ -95,30 +95,30 @@ def binomial_test(data, ratings, default_flag, predicted_pd, alpha_level=0.05):
     """
 
     # Perform plausibility checks
-    assert all(x in data.columns for x in [ratings, default_flag, predicted_pd]), "Not all columns are present"
+    assert all(x in data.columns for x in [ratings, default_flag, predicted_pd]), "Missing columns"
     assert all(x in [0, False, 1, True] for x in data[default_flag]), "Default flag can have only value 0 and 1"
     assert len(data[ratings].unique()) < 40, "Number of PD ratings is excessive"
     assert all(x >= 0 and x <= 1 for x in data[predicted_pd]), "Predicted PDs must be between 0% and 100%"
 
     # Transform input data into the required format
-    df = data.groupby(ratings).agg({predicted_pd: "mean", default_flag: ["count", "sum", "mean"]})
-    df.columns = ["PD", "N", "D", "Default Rate"]
+    df = data.groupby(ratings).agg({predicted_pd: "mean",
+                                    default_flag: ["count", "sum", "mean"]}).reset_index()
+    df.columns = ["Rating class", "Predicted PD", "Total count", "Defaults", "Actual Default Rate"]
 
     # Calculate Binomial test outcome for each rating
-    df["p_value"] = _binomial(df["PD"], df["D"], df["N"])
-    df["reject"] = df["p_value"] < alpha_level
+    df["p_value"] = _binomial(df["Predicted PD"], df["Defaults"], df["Total count"])
+    df["Reject H0"] = df["p_value"] < alpha_level
 
     return df
 
 
-def _brier(ratings, default_flag, df):
+def _brier(predicted_values, realised_values):
     """
 
     Parameters
     ----------
-    ratings : Pandas Series of rating categories
-    default_flag : Pandas Series of default outcomes (0/1 or False/True)
-    df : Pandas DataFrame with ratings as rownames and a column of hypothesized 'PD' values
+    predicted_values : Pandas Series of predicted PD outcomes
+    realised_values : Pandas Series of realised PD outcomes
 
     Returns
     -------
@@ -132,8 +132,8 @@ def _brier(ratings, default_flag, df):
     """
 
     # Calculate mean squared error
-    errors = default_flag - [df.loc[rating, "PD"] for rating in ratings]
-    mse = (errors**2).mean()
+    errors = realised_values - predicted_values
+    mse = (errors**2).sum()
 
     return mse
 
@@ -209,19 +209,9 @@ def brier_score(data, ratings, default_flag, predicted_pd):
     df.columns = ["PD", "N", "D", "Default Rate"]
 
     # Calculate Brier score for the dataset
-    b_score = _brier(data[ratings], data[default_flag], df)
+    b_score = _brier(df['PD'], df['Default Rate'])
 
-    # Add a row of totals
-    n_tot = df["N"].sum()
-    d_tot = df["D"].sum()
-    pd_tot = sum(df["N"] * df["PD"]) / n_tot
-    df.loc["total"] = [pd_tot, n_tot, d_tot, d_tot / n_tot]
-
-    # Put the Brier score into the output
-    df["brier_score"] = None
-    df.loc["total", "brier_score"] = b_score
-
-    return df
+    return b_score
 
 
 def _herfindahl(df):
@@ -254,7 +244,7 @@ def _herfindahl(df):
     return cv, h
 
 
-def herfindahl_test(data1, data2, ratings, alpha_level=0.05):
+def herfindahl_multiple_period_test(data1, data2, ratings, alpha_level=0.05):
     """Calculate the Herfindahl test for a given probability of defaults buckets
 
     Parameters
@@ -356,6 +346,85 @@ def herfindahl_test(data1, data2, ratings, alpha_level=0.05):
         df.loc["total", "reject"] = p_value < alpha_level
 
     return df
+
+
+def herfindahl_test(data1, ratings, alpha_level=0.05):
+    """Calculate the Herfindahl test for a given probability of defaults buckets
+
+    Parameters
+    ----------
+    data1 : Pandas DataFrame with at least one column
+            ratings : PD rating class of obligor
+    data2 : Pandas DataFrame with at least one column
+            ratings : PD rating class of obligor
+
+    ratings : column label for ratings
+    alpha_level : false positive rate of hypothesis test (default .05)
+
+    Returns
+    -------
+    Pandas DataFrame with the following columns :
+        Rating (Index) : Contains the ratings of each class/group
+        N_initial : number of obligors in each group and total
+        h_initial : Herfindahl index for initial dataset
+        N_current : number of obligors in each group and total
+        h_current : Herfindahl index for current dataset
+        p_value : overall Herfindahl test p-value
+        reject : whether to reject the null hypothesis at alpha_level
+
+
+    Notes
+    -----
+    The Herfindahl test looks for an increase in the
+    dispersion of the rating grades over time.
+    The (one-sided) null hypothesis is that the current Herfindahl
+    index is no greater than the initial Herfindahl index.
+    The test statistic is a suitably standardized difference
+    in the coefficient of variation, which is monotonically
+    related to the Herfindahl index.
+    If the Herfindahl index has not changed, then the
+    test statistic has the standard Normal distribution.
+    Large values of this test statistic
+    provide evidence against the null hypothesis.
+    (Note that the reference [1] has an uncommon defintion
+    of Herfindahl index, whereas we return the common definition)
+
+    .. [1] "Instructions for reporting the validation results
+            of internal models - IRB Pillar I models for credit risks," ECB,
+            pp. 26-27, 2019.
+
+
+    Examples
+    --------
+
+    >>> import random, numpy as np
+    >>> buckets = ['A', 'B', 'C']
+    >>> ratings1 = random.choices(buckets,  [0.4, 0.5, 0.1], k=1000)
+    >>> test_data1 = pd.DataFrame({'ratings': ratings1})
+    >>> ratings2 = random.choices(buckets,  [0.4, 0.5, 0.1], k=1000)
+    >>> test_data2 = pd.DataFrame({'ratings': ratings2})
+    >>> from meliora import herfindahl_test
+    >>> herfindahl_test(test_data1, test_data2, "ratings")
+
+           N_initial h_initial  N_current h_current   p_value reject
+    B            489      None        487      None      None   None
+    A            401      None        414      None      None   None
+    C            110      None         99      None      None   None
+    total       1000   0.19291       1000  0.206819  0.475327  False
+
+    """
+
+    # Perform plausibility checks
+    assert ratings in data1.columns, f"Ratings column {ratings} not found"
+    assert len(data1[ratings].unique()) < 40, "Number of PD ratings is excessive"
+
+    # Transform input data into the required format
+    df1 = pd.DataFrame({"N_initial": data1[ratings].value_counts()})
+
+    # Calculate the Herfindahl index for each dataset
+    c1, h1 = _herfindahl(df1)
+
+    return c1, h1
 
 
 def _hosmer(p, d, n):
@@ -477,20 +546,7 @@ def hosmer_test(data, ratings, default_flag, predicted_pd, alpha_level=0.05):
     # Calculate Hosmer-Lemeshow test's p-value for the dataset
     p_value = _hosmer(df["PD"], df["D"], df["N"])
 
-    # Add a row of totals
-    n_tot = df["N"].sum()
-    d_tot = df["D"].sum()
-    pd_tot = sum(df["N"] * df["PD"]) / n_tot
-    df.loc["total"] = [pd_tot, n_tot, d_tot, d_tot / n_tot]
-
-    # Put the p-value and test result into the output
-    df["p_value"] = None
-    df.loc["total", "p_value"] = p_value
-    if alpha_level:
-        df["reject"] = None
-        df.loc["total", "reject"] = p_value < alpha_level
-
-    return df
+    return [p_value, p_value < alpha_level]
 
 
 def _spiegelhalter(ratings, default_flag, df):
@@ -731,11 +787,12 @@ def jeffreys_test(data, ratings, default_flag, predicted_pd, alpha_level=0.05):
     assert all(x >= 0 and x <= 1 for x in data[predicted_pd]), "Predicted PDs must be between 0% and 100%"
 
     # Transform input data into the required format
-    df = data.groupby(ratings).agg({predicted_pd: "mean", default_flag: ["count", "sum", "mean"]})
-    df.columns = ["PD", "N", "D", "Default Rate"]
+    df = data.groupby(ratings).agg({predicted_pd: "mean",
+                                    default_flag: ["count", "sum", "mean"]}).reset_index()
+    df.columns = ["Rating class", "Predicted PD", "Total count", "Defaults", "Actual Default Rate"]
 
-    # Calculate Jeffrey's test outcome for each rating
-    df["p_value"] = _jeffreys(df["PD"], df["D"], df["N"])
-    df["reject"] = df["p_value"] < alpha_level
+    # Calculate Binomial test outcome for each rating
+    df["p_value"] = _jeffreys(df["Predicted PD"], df["Defaults"], df["Total count"])
+    df["Reject H0"] = df["p_value"] < alpha_level
 
     return df
