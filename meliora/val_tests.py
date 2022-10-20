@@ -453,15 +453,18 @@ def _hosmer(p, d, n):
 
     assert len(p) > 2, "Hosmer-Lemeshow test requires at least three groups"
 
-    expected_def = n * p
-    expected_nodef = n * (1 - p)
-    if any(expected_def < 10) or any(expected_nodef < 10):
-        print("Warning: a group has fewer than 10 expected defaults or non-defaults.")
-        print("--> Chi-squared approximation is questionable.")
+    # expected_def = n * p
+    # expected_nodef = n * (1 - p)
+    # if any(expected_def < 10) or any(expected_nodef < 10):
+    #     print("Warning: a group has fewer than 10 expected defaults or non-defaults.")
+    #     print("--> Chi-squared approximation is questionable.")
 
-    terms = (expected_def - d) ** 2 / (p * expected_nodef)
-    chisq_stat = terms.sum()
-    p_value = 1 - chi2.cdf(chisq_stat, len(p) - 2)
+    # terms = (expected_def - d) ** 2 / (p * expected_nodef)
+    # chisq_stat = terms.sum()
+    # p_value = 1 - chi2.cdf(chisq_stat, len(p) - 2)
+
+    kr = sum((d - p * n)**2 / (n * p * (1 - p))) # todo: treatment of missing values
+    p_value = 1 - chi2.cdf(kr, len(p)) # todo: p.val <- pchisq(q = hl, df = k, lower.tail = FALSE)
 
     return p_value
 
