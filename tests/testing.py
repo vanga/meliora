@@ -76,3 +76,13 @@ class TestCases(unittest.TestCase):
         expected = 0.408232
 
         self.assertAlmostEqual(result[1], expected)
+
+    def test_roc_auc(self):
+        """Expected value calculation is described in the r_test_cases.ipynb"""
+        data = self.load_pd_data()
+        result = vt.roc_auc(data, "default_flag", "predicted_pd")
+
+        # Expected results (see R notebook for values)
+        expected = 0.500854754970242 
+
+        self.assertAlmostEqual(result, expected)

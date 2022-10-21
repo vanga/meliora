@@ -45,11 +45,6 @@ test = [
     "shellcheck-py==0.8.0.4"
 ]
 
-[project.urls]
-Documentation = "https://github.com/microsoft/python-package-template/tree/main#readme"
-Source = "https://github.com/microsoft/python-package-template"
-Tracker = "https://github.com/microsoft/python-package-template/issues"
-
 [tool.flit.module]
 name = "python_package"
 
@@ -57,7 +52,7 @@ name = "python_package"
 exclude_dirs = ["build","dist","tests","scripts"]
 number = 4
 recursive = true
-targets = "src"
+targets = "meliora"
 
 [tool.black]
 line-length = 120
@@ -70,7 +65,7 @@ branch = true
 fail_under = 100
 
 [tool.pyright]
-include = ["src"]
+include = ["meliora"]
 exclude = [
     "**/node_modules",
     "**/__pycache__",
@@ -84,13 +79,13 @@ pythonVersion = "3.7"
 pythonPlatform = "Linux"
 
 executionEnvironments = [
-  { root = "src" }
+  { root = "meliora" }
 ]
 
 [tool.pytest.ini_options]
-addopts = "--cov-report xml:coverage.xml --cov src --cov-fail-under 0 --cov-append -m 'not integration'"
+addopts = "--cov-report xml:coverage.xml --cov meliora --cov-fail-under 0 --cov-append -m 'not integration'"
 pythonpath = [
-  "src"
+  "meliora"
 ]
 testpaths = "tests"
 junit_family = "xunit2"

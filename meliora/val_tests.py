@@ -4,7 +4,7 @@ import pandas as pd
 import numpy as np
 from scipy.stats import chi2
 from scipy.stats import beta
-from sklearn.metrics import accuracy_score
+from sklearn.metrics import roc_auc_score
 
 
 def _binomial(p, d, n):
@@ -790,7 +790,7 @@ def jeffreys_test(data, ratings, default_flag, predicted_pd, alpha_level=0.05):
     return df
 
 
-def auc(df, target, prediction):
+def roc_auc(df, target, prediction):
     """Compute Area ROC AUC from prediction scores.
 
     Note: this implementation can be used with binary, multiclass and
@@ -819,5 +819,4 @@ def auc(df, target, prediction):
     assert all(x >= 0 and x <= 1 for x in df[target]), "Predicted PDs must be between 0% and 100%"
     assert all(x >= 0 and x <= 1 for x in df[prediction]), "Predicted PDs must be between 0% and 100%"
 
-
-    return accuracy_score(df[target], df[prediction])
+    return roc_auc_score(df[target], df[prediction])
