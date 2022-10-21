@@ -1,8 +1,10 @@
 from scipy.stats import binom
 from scipy.stats import norm
 import pandas as pd
+import numpy as np
 from scipy.stats import chi2
 from scipy.stats import beta
+from sklearn.metrics import accuracy_score
 
 
 def _binomial(p, d, n):
@@ -463,8 +465,8 @@ def _hosmer(p, d, n):
     # chisq_stat = terms.sum()
     # p_value = 1 - chi2.cdf(chisq_stat, len(p) - 2)
 
-    kr = sum((d - p * n)**2 / (n * p * (1 - p))) # todo: treatment of missing values
-    p_value = 1 - chi2.cdf(kr, len(p)) # todo: p.val <- pchisq(q = hl, df = k, lower.tail = FALSE)
+    kr = sum((d - p * n)**2 / (n * p * (1 - p)))  # todo: treatment of missing values
+    p_value = 1 - chi2.cdf(kr, len(p))  # todo: p.val <- pchisq(q = hl, df = k, lower.tail = FALSE)
 
     return p_value
 
@@ -552,8 +554,9 @@ def hosmer_test(data, ratings, default_flag, predicted_pd, alpha_level=0.05):
     return [p_value, p_value < alpha_level]
 
 
-def _spiegelhalter(ratings, default_flag, df):
+def _spiegelhalter(realised_values, predicted_values, alpha_level=0.05):
     """
+    todo: https://github.com/andrija-djurovic/PDtoolkit/blob/main/R/12_PREDICTIVE_POWER.R
 
     Parameters
     ----------
@@ -577,21 +580,20 @@ def _spiegelhalter(ratings, default_flag, df):
     """
 
     # Calculate mean squared error
-    errors = default_flag - [df.loc[rating, "PD"] for rating in ratings]
-    mse = (errors**2).mean()
+    errors = realised_values - predicted_values
+    mse = (errors**2).sum() / len(errors)
 
-    # Calculate null expectation and variance of MSE
-    expectations = df["PD"] * (1 - df["PD"])
-    variances = expectations * (1 - 2 * df["PD"]) ** 2
-    n_tot = df["N"].sum()
-    expected_mse = (expectations * df["N"]).sum() / n_tot
-    variance_mse = (variances * df["N"]).sum() / n_tot**2
+    # # Calculate null expectation and variance of MSE
+    expectations = sum(predicted_values * (1 - predicted_values)) / len(realised_values)
+    variances = sum(predicted_values * (1 - 2 * predicted_values)**2 * (1 - predicted_values)) / len(realised_values)**2
+
+    # Calculate standardized statistic
+    z_score = (mse - expectations) / np.sqrt(variances)  # todo: check formula
 
     # Calculate standardized MSE as test statistic, then its p-value
-    chisq_stat = (mse - expected_mse) ** 2 / variance_mse
-    p_value = 1 - chi2.cdf(chisq_stat, 1)
+    outcome = z_score > norm.ppf(1 - alpha_level/2)
 
-    return p_value
+    return z_score, outcome
 
 
 def spiegelhalter_test(data, ratings, default_flag, predicted_pd, alpha_level=0.05):
@@ -670,22 +672,9 @@ def spiegelhalter_test(data, ratings, default_flag, predicted_pd, alpha_level=0.
     df.columns = ["PD", "N", "D", "Default Rate"]
 
     # Calculate Spiegelhalter test's p-value for the dataset
-    p_value = _spiegelhalter(data[ratings], data[default_flag], df)
+    result = _spiegelhalter(df["PD"], df["Default Rate"])
 
-    # Add a row of totals
-    n_tot = df["N"].sum()
-    d_tot = df["D"].sum()
-    pd_tot = sum(df["N"] * df["PD"]) / n_tot
-    df.loc["total"] = [pd_tot, n_tot, d_tot, d_tot / n_tot]
-
-    # Put the p-value and test result into the output
-    df["p_value"] = None
-    df.loc["total", "p_value"] = p_value
-    if alpha_level:
-        df["reject"] = None
-        df.loc["total", "reject"] = p_value < alpha_level
-
-    return df
+    return result
 
 
 def _jeffreys(p, d, n):
@@ -799,3 +788,36 @@ def jeffreys_test(data, ratings, default_flag, predicted_pd, alpha_level=0.05):
     df["Reject H0"] = df["p_value"] < alpha_level
 
     return df
+
+
+def auc(df, target, prediction):
+    """Compute Area ROC AUC from prediction scores.
+
+    Note: this implementation can be used with binary, multiclass and
+    multilabel classification, but some restrictions apply (see Parameters).
+    Read more in the :ref:`User Guide <roc_metrics>`.
+    Parameters
+    ----------
+    y_true : array-like of shape (n_samples,) or (n_samples, n_classes)
+        True labels or binary label indicators. The binary and multiclass cases
+        expect labels with shape (n_samples,) while the multilabel case expects
+        binary label indicators with shape (n_samples, n_classes).
+    y_score : array-like of shape (n_samples,) or (n_samples, n_classes)
+        Target scores.
+
+    Returns
+    -------
+    auc : float
+        Area Under the Curve score.
+
+    See Also
+    --------
+    https://github.com/scikit-learn/scikit-learn/blob/36958fb24/sklearn/metrics/_ranking.py#L47
+    """
+
+    # Perform plausibility checks
+    assert all(x >= 0 and x <= 1 for x in df[target]), "Predicted PDs must be between 0% and 100%"
+    assert all(x >= 0 and x <= 1 for x in df[prediction]), "Predicted PDs must be between 0% and 100%"
+
+
+    return accuracy_score(df[target], df[prediction])
