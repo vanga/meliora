@@ -15,6 +15,10 @@ class TestCases(unittest.TestCase):
         """Load data for testing"""
         return pd.read_csv("C:\\projects\\meliora\\data\\lgd_dataset.csv")
 
+    def load_german_data(self):
+        """Load data for testing"""
+        return pd.read_csv("C:\\projects\\meliora\\data\\german_data.csv")
+
     def test_jeffreys(self):
         """Expected value calculation is described in the r_test_cases.ipynb"""
 
@@ -93,7 +97,7 @@ class TestCases(unittest.TestCase):
 
     def test_clar(self):
         data = self.load_lgd_data()
-        result = vt.clar(data["realised_outcome"], data["predicted_outcome"])
+        result = vt.clar(data, "realised_outcome", "predicted_outcome")
 
         # Expected results (see R notebook for values)
         expected = 0.84
@@ -107,7 +111,14 @@ class TestCases(unittest.TestCase):
         pass
 
     def test_calc_iv(self):
-        pass
+        """Information calculation is described in the r_test_cases.ipynb"""
+        data = self.load_german_data()
+        result = vt.calc_iv(data, "checkingstatus", "GoodCredit")
+
+        # Expected results (see R notebook for values)
+        expected = 0.308738892211175
+
+        self.assertAlmostEqual(result[1], expected)
 
     def test_lgd_t_test(self):
         pass

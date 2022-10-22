@@ -825,7 +825,7 @@ def roc_auc(df, target, prediction):
     return roc_auc_score(df[target], df[prediction])
 
 
-def clar(predicted_ratings, realised_outcomes):
+def clar(df, predicted_ratings, realised_outcomes):
     """
     CLAR serves as a measure of ranking ability against LGD risk
     The cumulative LGD accuracy ratio (CLAR) curve can be treated as
@@ -854,20 +854,16 @@ def clar(predicted_ratings, realised_outcomes):
         >>> print(res)
     """
 
-    # Create a dataframe
-    frame = {"predicted_ratings": predicted_ratings, "realised_outcomes": realised_outcomes}
-    df = pd.DataFrame(frame)
-
     # Calculate CLAR
     x_s = [0]
     x_values = [0]
     y_values = [0]
 
-    for i, j in enumerate(list(set(df.bucket))[::-1]):
-        x = (df.predicted_ratings == j).sum()
-        x_bucket = df.sort_values(by="realised_outcomes", ascending=False)[x_s[i] : x_s[i] + x]
+    for i, j in enumerate(list(set(df[predicted_ratings]))[::-1]):
+        x = (df[predicted_ratings] == j).sum()
+        x_bucket = df.sort_values(by=realised_outcomes, ascending=False)[x_s[i] : x_s[i] + x]
         x_value = x / len(df)
-        y_value = (x_bucket.bucket == j).sum() / len((x_bucket.bucket == j))
+        y_value = (x_bucket[realised_outcomes] == j).sum() / len((x_bucket[realised_outcomes] == j))
         x_values.append(x_value)
         y_values.append(y_value)
         x_s.append(x + 1)
@@ -1063,8 +1059,9 @@ def calc_iv(df, feature, target, pr=0):
     data["IV"] = (data["WoE"] * (data["Distribution Good"] - data["Distribution Bad"])).sum()
 
     data = data.sort_values(by=["Variable", "Value"], ascending=True)
+    iv = data['IV'].sum()
 
-    return data["IV"].values[0]
+    return data, iv
 
 
 def lgd_t_test(df, observed_LGD_col, expected_LGD_col, verbose=False):
