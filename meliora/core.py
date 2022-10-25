@@ -862,7 +862,7 @@ def clar(df, predicted_ratings, realised_outcomes):
 
     for i, j in enumerate(list(set(df[predicted_ratings]))[::-1]):
         x = (df[predicted_ratings] == j).sum()
-        x_bucket = df.sort_values(by=realised_outcomes, ascending=False)[x_s[i] : x_s[i] + x]
+        x_bucket = df.sort_values(by=realised_outcomes, ascending=False)[x_s[i]: x_s[i] + x]
         x_value = x / len(df)
         y_value = (x_bucket[realised_outcomes] == j).sum() / len((x_bucket[realised_outcomes] == j))
         x_values.append(x_value)
@@ -1057,7 +1057,7 @@ def calc_iv(df, feature, target, pr=0):
     data["Distribution Good"] = (data["All"] - data["Bad"]) / (data["All"].sum() - data["Bad"].sum())
     data["Distribution Bad"] = data["Bad"] / data["Bad"].sum()
     data["WoE"] = np.log(data["Distribution Good"] / data["Distribution Bad"])
-    data["IV"] = (data["WoE"] * (data["Distribution Good"] - data["Distribution Bad"]))
+    data["IV"] = data["WoE"] * (data["Distribution Good"] - data["Distribution Bad"])
 
     data = data.sort_values(by=["Variable", "Value"], ascending=True)
     iv = data["IV"].sum()
@@ -1218,7 +1218,7 @@ def migration_matrix_stability(df, initial_ratings_col, final_ratings_col):
     return z_df, phi_df
 
 
-def psi(data, bin_flag, variable): #todo: expected vs actual
+def psi(data, bin_flag, variable):  # todo: expected vs actual
     """Calculate the PSI for a single variable
     Args:
         expected_array: numpy array of original values
@@ -1232,7 +1232,7 @@ def psi(data, bin_flag, variable): #todo: expected vs actual
     df = pd.crosstab(data[variable], data[bin_flag], normalize="columns")
     df.columns = ["actual", "expected"]
 
-    df['expected'] = np.where(df['expected'] == 0, 0.0001, df['expected'])
+    df["expected"] = np.where(df["expected"] == 0, 0.0001, df["expected"])
 
     # Calculating PSI
     df["PSI"] = (df["actual"] - df["expected"]) * np.log(df["actual"] / df["expected"])
@@ -1241,7 +1241,8 @@ def psi(data, bin_flag, variable): #todo: expected vs actual
 
     return df, psi
 
-def kendall_tau(x, y, variant='b'):
+
+def kendall_tau(x, y, variant="b"):
     """
     Calculate Kendall's tau, a correlation measure for ordinal data.
     This is a wrapper around SciPy kendalltau function.
@@ -1292,23 +1293,20 @@ def kendall_tau(x, y, variant='b'):
     0.2827454599327748
     """
 
-    tau, pvalue = stats.kendalltau(x, y, initial_lexsort=None, variant='b')
+    tau, pvalue = stats.kendalltau(x, y, initial_lexsort=None, variant="b")
 
     return tau, pvalue
 
 
-from scipy import stats
-
-
-def somersd(array_1, array_2, alternative='two-sided'):
+def somersd(array_1, array_2, alternative="two-sided"):
     """
     Calculates Somers' D, an asymmetric measure of ordinal association.
     This is a wrapper around scipy.stats.somersd function.
-    Somers' :math:`D` is a measure of the correspondence between two rankings. 
-    It considers the difference between the number of concordant 
+    Somers' :math:`D` is a measure of the correspondence between two rankings.
+    It considers the difference between the number of concordant
     and discordant pairs in two rankings and is  normalized such that values
     close  to 1 indicate strong agreement and values close to -1 indicate
-    strong disagreement. 
+    strong disagreement.
     Parameters
     ----------
     x: array_like
@@ -1360,13 +1358,13 @@ def somersd(array_1, array_2, alternative='two-sided'):
     0.6032766111513396
     >>> res.pvalue
     1.0007091191074533e-27
-    
+
     """
 
-    return stats.spearmanr(array_1, array_2, alternative='two-sided')
+    return stats.somersd(array_1, array_2, alternative="two-sided")
 
 
-    def spearman(array_1, array_2, alternative='two-sided'):
+def spearman_corr(array_1, array_2, alternative="two-sided"):
     """
     Calculate a Spearman correlation coefficient with associated p-value.
     This is a wrapper around scipy.stats.spearmanr function.
@@ -1379,25 +1377,25 @@ def somersd(array_1, array_2, alternative='two-sided'):
     monotonic relationship. Positive correlations imply that as x
     increases, so does y. Negative correlations imply that as x increases,
     y decreases.
-    The p-value roughly indicates the probability of an uncorrelated 
-    system producing datasets that have a Spearman correlation at least 
-    as extreme as the one computed from these datasets. The p-values 
-    are not entirely reliable but are probably reasonable for datasets 
+    The p-value roughly indicates the probability of an uncorrelated
+    system producing datasets that have a Spearman correlation at least
+    as extreme as the one computed from these datasets. The p-values
+    are not entirely reliable but are probably reasonable for datasets
     larger than 500 or so.
 
     Parameters
     ----------
     array_1 : pandas series
-        Series containing multiple observations 
+        Series containing multiple observations
     array_2 : pandas series
-        Series containing multiple observations 
+        Series containing multiple observations
     alternative : {'two-sided', 'less', 'greater'}, optional
         Defines the alternative hypothesis. Default is 'two-sided'.
         The following options are available:
         * 'two-sided': the correlation is nonzero
         * 'less': the correlation is negative (less than zero)
         * 'greater':  the correlation is positive (greater than zero)
-    
+
     Returns
     -------
     correlation : float or ndarray (2-D square)
@@ -1410,18 +1408,18 @@ def somersd(array_1, array_2, alternative='two-sided'):
         is that two sets of data are uncorrelated. See `alternative` above
         for alternative hypotheses. `pvalue` has the same
         shape as `correlation`.
- 
+
     References
     -------------
         [1] Zwillinger, D. and Kokoska, S. (2000). CRC Standard
         Probability and Statistics Tables and Formulae. Chapman & Hall: New
         York. 2000.
         Section  14.7
-    
+
     Examples
     --------
     >>> spearmanr([1,2,3,4,5], [5,6,7,8,7])
     SpearmanrResult(correlation=0.82078..., pvalue=0.08858...)
     """
 
-    return stats.spearmanr(array_1, array_2, alternative='two-sided')
+    return stats.spearmanr(array_1, array_2, alternative="two-sided")
