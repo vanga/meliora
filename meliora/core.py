@@ -1056,10 +1056,10 @@ def calc_iv(df, feature, target, pr=0):
     data["Distribution Good"] = (data["All"] - data["Bad"]) / (data["All"].sum() - data["Bad"].sum())
     data["Distribution Bad"] = data["Bad"] / data["Bad"].sum()
     data["WoE"] = np.log(data["Distribution Good"] / data["Distribution Bad"])
-    data["IV"] = (data["WoE"] * (data["Distribution Good"] - data["Distribution Bad"])).sum()
+    data["IV"] = (data["WoE"] * (data["Distribution Good"] - data["Distribution Bad"]))
 
     data = data.sort_values(by=["Variable", "Value"], ascending=True)
-    iv = data['IV'].sum()
+    iv = data["IV"].sum()
 
     return data, iv
 
@@ -1215,3 +1215,27 @@ def migration_matrix_stability(df, initial_ratings_col, final_ratings_col):
             z_df.iloc[i - 1, j - 1] = z_ij
     phi_df = z_df.apply(lambda x: x.apply(lambda y: norm.cdf(y)))
     return z_df, phi_df
+
+
+def psi(data, bin_flag, variable): #todo: expected vs actual
+    """Calculate the PSI for a single variable
+    Args:
+        expected_array: numpy array of original values
+        actual_array: numpy array of new values, same size as expected
+        buckets: number of percentile ranges to bucket the values into
+    Returns:
+        psi_value: calculated PSI value
+
+    """
+
+    df = pd.crosstab(data[variable], data[bin_flag], normalize="columns")
+    df.columns = ["actual", "expected"]
+
+    df['expected'] = np.where(df['expected'] == 0, 0.0001, df['expected'])
+
+    # Calculating PSI
+    df["PSI"] = (df["actual"] - df["expected"]) * np.log(df["actual"] / df["expected"])
+
+    psi = np.sum(df["PSI"])
+
+    return df, psi

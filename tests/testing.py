@@ -19,6 +19,10 @@ class TestCases(unittest.TestCase):
         """Load data for testing"""
         return pd.read_csv("C:\\projects\\meliora\\data\\german_data.csv")
 
+    def load_psi_data(self):
+        """Load data for testing"""
+        return pd.read_csv("C:\\projects\\meliora\\data\\test_pd_psi.csv")
+
     def test_jeffreys(self):
         """Expected value calculation is described in the r_test_cases.ipynb"""
 
@@ -116,7 +120,7 @@ class TestCases(unittest.TestCase):
         result = vt.calc_iv(data, "checkingstatus", "GoodCredit")
 
         # Expected results (see R notebook for values)
-        expected = 0.308738892211175
+        expected = 0.6660115034 
 
         self.assertAlmostEqual(result[1], expected)
 
@@ -125,3 +129,12 @@ class TestCases(unittest.TestCase):
 
     def test_migration_matrix_stability(self):
         pass
+
+    def test_psi(self):
+        data = self.load_psi_data()
+        result = vt.psi(data, 'year_bins', 'remaining_mat_bin')
+
+        # Expected results (see R notebook for values)
+        expected = 1.0344129494141174
+
+        self.assertAlmostEqual(result[1], expected)
