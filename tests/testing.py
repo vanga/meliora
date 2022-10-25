@@ -107,7 +107,7 @@ class TestCases(unittest.TestCase):
         expected = 0.84
 
         self.assertAlmostEqual(result, expected)
-    
+
     def test_loss_capture_ratio(self):
         pass
 
@@ -120,7 +120,7 @@ class TestCases(unittest.TestCase):
         result = vt.calc_iv(data, "checkingstatus", "GoodCredit")
 
         # Expected results (see R notebook for values)
-        expected = 0.6660115034 
+        expected = 0.6660115034
 
         self.assertAlmostEqual(result[1], expected)
 
@@ -132,7 +132,34 @@ class TestCases(unittest.TestCase):
 
     def test_psi(self):
         data = self.load_psi_data()
-        result = vt.psi(data, 'year_bins', 'remaining_mat_bin')
+        result = vt.psi(data, "year_bins", "remaining_mat_bin")
+
+        # Expected results (see R notebook for values)
+        expected = 1.0344129494141174
+
+        self.assertAlmostEqual(result[1], expected)
+
+    def test_spearman(self):
+        data = self.load_psi_data()
+        result = vt.spearman(data, "year_bins", "remaining_mat_bin")
+
+        # Expected results (see R notebook for values)
+        expected = 1.0344129494141174
+
+        self.assertAlmostEqual(result[1], expected)
+
+    def test_somersd(self):
+        data = self.load_psi_data()
+        result = vt.somersd(data, "year_bins", "remaining_mat_bin")
+
+        # Expected results (see R notebook for values)
+        expected = 1.0344129494141174
+
+        self.assertAlmostEqual(result[1], expected)
+
+    def test_kendall_tau(self):
+        data = self.load_psi_data()
+        result = vt.kendall_tau(data, "year_bins", "remaining_mat_bin")
 
         # Expected results (see R notebook for values)
         expected = 1.0344129494141174

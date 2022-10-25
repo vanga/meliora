@@ -8,6 +8,7 @@ from sklearn.metrics import roc_auc_score
 from sklearn.metrics import auc
 from sklearn import metrics
 from scipy.stats import t
+from scipy import stats
 
 
 def _binomial(p, d, n):
@@ -1239,3 +1240,188 @@ def psi(data, bin_flag, variable): #todo: expected vs actual
     psi = np.sum(df["PSI"])
 
     return df, psi
+
+def kendall_tau(x, y, variant='b'):
+    """
+    Calculate Kendall's tau, a correlation measure for ordinal data.
+    This is a wrapper around SciPy kendalltau function.
+    Kendall's tau is a measure of the correspondence between two rankings.
+    Values close to 1 indicate strong agreement, and values close to -1
+    indicate strong disagreement. This implements two variants of Kendall's
+    tau: tau-b (the default) and tau-c (also known as Stuart's tau-c). These
+    differ only in how they are normalized to lie within the range -1 to 1;
+    the hypothesis tests (their p-values) are identical. Kendall's original
+    tau-a is not implemented separately because both tau-b and tau-c reduce
+    to tau-a in the absence of ties.
+    Parameters
+    ----------
+    x, y : array_like
+        Arrays of rankings, of the same shape. If arrays are not 1-D, they
+        will be flattened to 1-D.
+    variant: {'b', 'c'}, optional
+        Defines which variant of Kendall's tau is returned. Default is 'b'.
+    Returns
+    -------
+    correlation : float
+       The tau statistic.
+    pvalue : float
+       The p-value for a hypothesis test whose null hypothesis is
+       an absence of association, tau = 0.
+    References
+    --------------
+    [1] Maurice G. Kendall, "A New Measure of Rank Correlation", Biometrika
+           Vol. 30, No. 1/2, pp. 81-93, 1938.
+    [2] Maurice G. Kendall, "The treatment of ties in ranking problems",
+           Biometrika Vol. 33, No. 3, pp. 239-251. 1945.
+    [3] Gottfried E. Noether, "Elements of Nonparametric Statistics",
+        John Wiley & Sons, 1967.
+    [4] Peter M. Fenwick, "A new data structure for cumulative frequency tables",
+        Software: Practice and Experience, Vol. 24, No. 3, pp. 327-336, 1994.
+    [5] Maurice G. Kendall, "Rank Correlation Methods" (4th Edition),
+           Charles Griffin & Co., 1970.
+    Scipy: https://github.com/scipy/scipy/blob/v1.8.1/scipy/stats/_stats_py.py#L4666-L4875
+    Examples
+    --------
+    >>> from scipy import stats
+    >>> x1 = [12, 2, 1, 12, 2]
+    >>> x2 = [1, 4, 7, 1, 0]
+    >>> tau, p_value = kendall_tau(x1, x2)
+    >>> tau
+    -0.47140452079103173
+    >>> p_value
+    0.2827454599327748
+    """
+
+    tau, pvalue = stats.kendalltau(x, y, initial_lexsort=None, variant='b')
+
+    return tau, pvalue
+
+
+from scipy import stats
+
+
+def somersd(array_1, array_2, alternative='two-sided'):
+    """
+    Calculates Somers' D, an asymmetric measure of ordinal association.
+    This is a wrapper around scipy.stats.somersd function.
+    Somers' :math:`D` is a measure of the correspondence between two rankings. 
+    It considers the difference between the number of concordant 
+    and discordant pairs in two rankings and is  normalized such that values
+    close  to 1 indicate strong agreement and values close to -1 indicate
+    strong disagreement. 
+    Parameters
+    ----------
+    x: array_like
+        1D array of rankings, treated as the (row) independent variable.
+        Alternatively, a 2D contingency table.
+    y: array_like, optional
+        If `x` is a 1D array of rankings, `y` is a 1D array of rankings of the
+        same length, treated as the (column) dependent variable.
+        If `x` is 2D, `y` is ignored.
+    alternative : {'two-sided', 'less', 'greater'}, optional
+        Defines the alternative hypothesis. Default is 'two-sided'.
+        The following options are available:
+        * 'two-sided': the rank correlation is nonzero
+        * 'less': the rank correlation is negative (less than zero)
+        * 'greater':  the rank correlation is positive (greater than zero)
+    Returns
+    -------
+    res : SomersDResult
+        A `SomersDResult` object with the following fields:
+            correlation : float
+               The Somers' :math:`D` statistic.
+            pvalue : float
+               The p-value for a hypothesis test whose null
+               hypothesis is an absence of association, :math:`D=0`.
+               See notes for more information.
+            table : 2D array
+               The contingency table formed from rankings `x` and `y` (or the
+               provided contingency table, if `x` is a 2D array)
+    References
+    ----------
+    [1] Robert H. Somers, "A New Asymmetric Measure of Association for
+           Ordinal Variables", *American Sociological Review*, Vol. 27, No. 6,
+           pp. 799--811, 1962.
+    [2] Morton B. Brown and Jacqueline K. Benedetti, "Sampling Behavior of
+           Tests for Correlation in Two-Way Contingency Tables", *Journal of
+           the American Statistical Association* Vol. 72, No. 358, pp.
+           309--315, 1977.
+    [3] SAS Institute, Inc., "The FREQ Procedure (Book Excerpt)",
+           *SAS/STAT 9.2 User's Guide, Second Edition*, SAS Publishing, 2009.
+    [4] Laerd Statistics, "Somers' d using SPSS Statistics", *SPSS
+           Statistics Tutorials and Statistical Guides*,
+           https://statistics.laerd.com/spss-tutorials/somers-d-using-spss-statistics.php,
+           Accessed July 31, 2020.
+    Examples
+    --------
+    >>> table = [[27, 25, 14, 7, 0], [7, 14, 18, 35, 12], [1, 3, 2, 7, 17]]
+    >>> res = somersd(table)
+    >>> res.statistic
+    0.6032766111513396
+    >>> res.pvalue
+    1.0007091191074533e-27
+    
+    """
+
+    return stats.spearmanr(array_1, array_2, alternative='two-sided')
+
+
+    def spearman(array_1, array_2, alternative='two-sided'):
+    """
+    Calculate a Spearman correlation coefficient with associated p-value.
+    This is a wrapper around scipy.stats.spearmanr function.
+    The Spearman rank-order correlation coefficient is a nonparametric
+    measure of the monotonicity of the relationship between two datasets.
+    Unlike the Pearson correlation, the Spearman correlation does not
+    assume that both datasets are normally distributed. Like other
+    correlation coefficients, this one varies between -1 and +1 with 0
+    implying no correlation. Correlations of -1 or +1 imply an exact
+    monotonic relationship. Positive correlations imply that as x
+    increases, so does y. Negative correlations imply that as x increases,
+    y decreases.
+    The p-value roughly indicates the probability of an uncorrelated 
+    system producing datasets that have a Spearman correlation at least 
+    as extreme as the one computed from these datasets. The p-values 
+    are not entirely reliable but are probably reasonable for datasets 
+    larger than 500 or so.
+
+    Parameters
+    ----------
+    array_1 : pandas series
+        Series containing multiple observations 
+    array_2 : pandas series
+        Series containing multiple observations 
+    alternative : {'two-sided', 'less', 'greater'}, optional
+        Defines the alternative hypothesis. Default is 'two-sided'.
+        The following options are available:
+        * 'two-sided': the correlation is nonzero
+        * 'less': the correlation is negative (less than zero)
+        * 'greater':  the correlation is positive (greater than zero)
+    
+    Returns
+    -------
+    correlation : float or ndarray (2-D square)
+        Spearman correlation matrix or correlation coefficient (if only 2
+        variables are given as parameters. Correlation matrix is square with
+        length equal to total number of variables (columns or rows) in ``a``
+        and ``b`` combined.
+    pvalue : float
+        The p-value for a hypothesis test whose null hypotheisis
+        is that two sets of data are uncorrelated. See `alternative` above
+        for alternative hypotheses. `pvalue` has the same
+        shape as `correlation`.
+ 
+    References
+    -------------
+        [1] Zwillinger, D. and Kokoska, S. (2000). CRC Standard
+        Probability and Statistics Tables and Formulae. Chapman & Hall: New
+        York. 2000.
+        Section  14.7
+    
+    Examples
+    --------
+    >>> spearmanr([1,2,3,4,5], [5,6,7,8,7])
+    SpearmanrResult(correlation=0.82078..., pvalue=0.08858...)
+    """
+
+    return stats.spearmanr(array_1, array_2, alternative='two-sided')
