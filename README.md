@@ -1,3 +1,5 @@
+[![PyPI version](https://badge.fury.io/py/vangap-meliora1.svg)](https://badge.fury.io/py/vangap-meliora1) ![CI Build](https://github.com/vanga/meliora/actions/workflows/CI.yml/badge.svg?event=push)
+
 About the package
 ------------------
 

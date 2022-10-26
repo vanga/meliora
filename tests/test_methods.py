@@ -1,4 +1,4 @@
-import meliora.meliora.core as vt
+import src.meliora.core as vt
 import unittest
 import pandas as pd
 
@@ -9,19 +9,19 @@ class TestCases(unittest.TestCase):
 
     def load_pd_data(self):
         """Load data for testing"""
-        return pd.read_csv("C:\\projects\\meliora\\data\\pd_test_data.csv")
+        return pd.read_csv("./data/pd_test_data.csv")
 
     def load_lgd_data(self):
         """Load data for testing"""
-        return pd.read_csv("C:\\projects\\meliora\\data\\lgd_dataset.csv")
+        return pd.read_csv("./data/lgd_dataset.csv")
 
     def load_german_data(self):
         """Load data for testing"""
-        return pd.read_csv("C:\\projects\\meliora\\data\\german_data.csv")
+        return pd.read_csv("./data/german_data.csv")
 
     def load_psi_data(self):
         """Load data for testing"""
-        return pd.read_csv("C:\\projects\\meliora\\data\\test_pd_psi.csv")
+        return pd.read_csv("./data/test_pd_psi.csv")
 
     def test_jeffreys(self):
         """Expected value calculation is described in the r_test_cases.ipynb"""

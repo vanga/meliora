@@ -3,7 +3,7 @@ requires = ["flit"]
 build-backend = "flit.buildapi"
 
 [project]
-name =  "py-project-toml"
+name =  "vangap-meliora1"
 authors = [
     {name = "Anton Treialt", email = "treialt@gmail.com"},
 ]
@@ -19,7 +19,13 @@ classifiers = [
     "Programming Language :: Python :: 3.9",
     "Programming Language :: Python :: 3.10"
 ]
-requires-python = ">=3.7"
+requires-python = ">=3.9"
+dependencies = [
+    "scipy>=1.9.3",
+    "pandas",
+    "numpy",
+    "sklearn"
+]
 dynamic = ["version"]
 
 [project.optional-dependencies]
@@ -46,13 +52,13 @@ test = [
 ]
 
 [tool.flit.module]
-name = "python_package"
+name = "meliora"
 
 [tool.bandit]
 exclude_dirs = ["build","dist","tests","scripts"]
 number = 4
 recursive = true
-targets = "meliora"
+targets = "src"
 
 [tool.black]
 line-length = 120
@@ -65,7 +71,7 @@ branch = true
 fail_under = 100
 
 [tool.pyright]
-include = ["meliora"]
+include = ["src"]
 exclude = [
     "**/node_modules",
     "**/__pycache__",
@@ -75,17 +81,17 @@ venv = "env37"
 reportMissingImports = true
 reportMissingTypeStubs = false
 
-pythonVersion = "3.7"
+pythonVersion = "3.9"
 pythonPlatform = "Linux"
 
 executionEnvironments = [
-  { root = "meliora" }
+  { root = "src" }
 ]
 
 [tool.pytest.ini_options]
 addopts = "--cov-report xml:coverage.xml --cov meliora --cov-fail-under 0 --cov-append -m 'not integration'"
 pythonpath = [
-  "meliora"
+  "src"
 ]
 testpaths = "tests"
 junit_family = "xunit2"
@@ -105,27 +111,7 @@ envlist = py, integration, spark, all
 
 [testenv]
 commands =
-    pytest -m "not integration and not spark" {posargs}
-
-[testenv:integration]
-commands =
-    pytest -m "integration" {posargs}
-
-[testenv:spark]
-extras = spark
-setenv =
-       PYSPARK_DRIVER_PYTHON = {envpython}
-       PYSPARK_PYTHON = {envpython}
-commands =
-    pytest -m "spark" {posargs}
-
-[testenv:all]
-extras = all
-setenv =
-       PYSPARK_DRIVER_PYTHON = {envpython}
-       PYSPARK_PYTHON = {envpython}
-commands =
-    pytest {posargs}
+    pytest -m "not integration" {posargs}
 """
 
 [tool.pylint]
