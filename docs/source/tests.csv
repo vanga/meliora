@@ -1,0 +1,33 @@
+#,Name,Area,Model types
+1,Accuracy Ratio,Discrimination,PD
+2,Bayesian error rate,Discrimination,PD
+3,Binomial test,Calibration,PD
+4,Brier score,Discrimination,PD
+5,Bucket test,Predictive power,LGD
+6,Hoshmer-Lemeshow test,Calibration,PD
+7,Coefficient of concordance,Discrimination,PD
+8,Concentration of rating grades,Concentration,PD
+9,Conditional Information Entropy Ratio,Discrimination,PD
+10,Cumulative LGD accuracy ratio,Discrimination,LGD
+11,ELBE back-test using t-test,Discrimination,LGD
+12,Herfhindahl index,Concentration,"PD, LGD, CCF"
+13,Information value,Discrimination,PD
+14,Jeffrey's test,Discrimination,PD
+15,Kendall tau,Discrimination,PD
+16,Kolmogorov-Smirnov test,Discrimination,PD
+17,Kullback-Leibler distance,Discrimination,PD
+18,Loss Capture Ratio,Discrimination,LGD
+19,Loss Shortfall,Predictive power,LGD
+20,Mean Absolute Deviation,Predictive power,"LGD, CCF"
+21,Migration matrices test,Discrimination,PD
+22,Normal test,Calibration,PD
+23,Population Stability Index,Stability,"PD, LGD, CCF"
+24,Receiver Operating Characteristic,Discrimination,PD
+25,Redelmeier test,Calibration,PD
+26,Somers D,Discrimination,PD
+27,Spearman rank correlation,Discrimination,LGD
+28,Spiegehalter test,Calibration,PD
+29,Stability of transition matrices,Stability,PD
+30,The Pietra Index,Discrimination,PD
+31,Traffic lights approach,Calibration,PD
+32,Transition matrix test,Predictive power,LGD
